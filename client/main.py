@@ -5,28 +5,24 @@ import raft_pb2
 import raft_pb2_grpc
 
 class RaftClient:
-    def __init__(self, server_address):
+    def __init__(self, server_address, client_id):
         self.channel = grpc.insecure_channel(server_address)
         self.stub = raft_pb2_grpc.RaftStub(self.channel)
+        self.client_id = client_id
 
-    def request_vote(self, candidate_id, term):
-        response = self.stub.RequestVote(raft_pb2.RequestVoteRequest(term=term, candidateId=candidate_id))
-        print(f"Process {candidate_id} received vote: {response.voteGranted}")
-
-    def append_entries(self, leader_id, log):
-        response = self.stub.AppendEntries(raft_pb2.AppendEntriesRequest(term=1, leaderId=leader_id, log=log))
-        print(f"Process {leader_id} append entries result: {response.success}")
+    def request_vote(self):
+        term = random.randint(150, 300)
+        response = self.stub.RequestVote(raft_pb2.RequestVoteRequest(term=term, candidateId=str(self.client_id)))
+        print(f"Process {self.client_id} received vote: {response.voteGranted}")
 
 def main():
     server_address = "localhost:50051"  # Adjust as necessary
-    client_id = random.randint(1, 100)  # Unique identifier for client
+    num_clients = 5  # Total number of clients to run one at a time
 
-    raft_client = RaftClient(server_address)
-
-    while True:
-        term = random.randint(150, 300)
-        raft_client.request_vote(client_id, term)
-        time.sleep(5)  # Wait before sending the next request
+    for client_id in range(1, num_clients + 1):
+        raft_client = RaftClient(server_address, client_id)
+        raft_client.request_vote()
+        time.sleep(5)  # Wait for a while before the next client runs
 
 if __name__ == "__main__":
     main()
