@@ -1,22 +1,37 @@
 const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
-const { RaftServer } = require('./raft');
+const path = require('path');
 
-const PROTO_PATH = './raft.proto';
+// Load the protobuf
+const PROTO_PATH = path.join(__dirname, 'raft.proto'); // Adjust the path as necessary
 const packageDefinition = protoLoader.loadSync(PROTO_PATH, {});
 const raftProto = grpc.loadPackageDefinition(packageDefinition).raft;
 
-const server = new grpc.Server();
-const raftServer = new RaftServer();
+// Import RaftServer class from raft.js
+const RaftServer = require('./raft'); // Adjust this path if needed
 
-// Define the service implementation
-server.addService(raftProto.Raft.service, {
-    RequestVote: raftServer.RequestVote.bind(raftServer),
-    AppendEntries: raftServer.AppendEntries.bind(raftServer),
-});
+// Main function to start the server
+function main() {
+    const server = new grpc.Server();
+    const raftServerInstance = new RaftServer('1'); // ID for this Raft server
 
-const PORT = process.env.PORT || 50051;
-server.bindAsync(`0.0.0.0:${PORT}`, grpc.ServerCredentials.createInsecure(), () => {
-    console.log(`Server running at http://127.0.0.1:${PORT}`);
-    server.start();
-});
+    // Register the RequestVote and AppendEntries methods
+    server.addService(raftProto.Raft.service, {
+        RequestVote: raftServerInstance.RequestVote.bind(raftServerInstance),
+        AppendEntries: raftServerInstance.AppendEntries.bind(raftServerInstance),
+    });
+
+    // Start the server on the specified address
+    const serverAddress = '127.0.0.1:50051';
+    server.bindAsync(serverAddress, grpc.ServerCredentials.createInsecure(), (error, port) => {
+        if (error) {
+            console.error(`Server could not bind: ${error}`);
+            return;
+        }
+        console.log(`Server running at http://${serverAddress}`);
+        server.start();
+    });
+}
+
+// Run the main function
+main();

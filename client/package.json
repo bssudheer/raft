@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "grpc-tools": "^1.12.4",
+    "protobufjs": "^7.4.0"
+  }
+}
