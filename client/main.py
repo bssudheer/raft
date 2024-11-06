@@ -11,8 +11,11 @@ class RaftClient:
         self.stub = raft_pb2_grpc.RaftStub(self.channel)
 
     def request_vote(self, term):
-        response = self.stub.RequestVote(raft_pb2.RequestVoteRequest(term=term, candidateId=str(self.client_id)))
-        print(f"Process {self.client_id} with term {term} received vote: {response.voteGranted}")
+        try:
+            response = self.stub.RequestVote(raft_pb2.RequestVoteRequest(term=term, candidateId=str(self.client_id)))
+            print(f"Process {self.client_id} with term {term} received vote: {response.voteGranted}")
+        except grpc.RpcError as e:
+            print(f"RPC failed: {e}")
 
 def main():
     server_address = '127.0.0.1:50051'
@@ -26,4 +29,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

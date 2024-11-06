@@ -3,17 +3,16 @@ const protoLoader = require('@grpc/proto-loader');
 const path = require('path');
 
 // Load the protobuf
-const PROTO_PATH = path.join(__dirname, 'raft.proto'); // Adjust the path as necessary
+const PROTO_PATH = path.join(__dirname, 'raft.proto');
 const packageDefinition = protoLoader.loadSync(PROTO_PATH, {});
 const raftProto = grpc.loadPackageDefinition(packageDefinition).raft;
 
 // Import RaftServer class from raft.js
-const RaftServer = require('./raft'); // Adjust this path if needed
+const RaftServer = require('./raft');
 
-// Main function to start the server
 function main() {
     const server = new grpc.Server();
-    const raftServerInstance = new RaftServer('1'); // ID for this Raft server
+    const raftServerInstance = new RaftServer('1');
 
     // Register the RequestVote and AppendEntries methods
     server.addService(raftProto.Raft.service, {
@@ -21,7 +20,6 @@ function main() {
         AppendEntries: raftServerInstance.AppendEntries.bind(raftServerInstance),
     });
 
-    // Start the server on the specified address
     const serverAddress = '127.0.0.1:50051';
     server.bindAsync(serverAddress, grpc.ServerCredentials.createInsecure(), (error, port) => {
         if (error) {
@@ -33,5 +31,4 @@ function main() {
     });
 }
 
-// Run the main function
 main();
